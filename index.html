@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicador de Sinal WiFi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes pulse-signal {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .signal-pulse {
+            animation: pulse-signal 2s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .wave {
+            animation: wave 2s ease-out infinite;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-white dark:bg-[#181818] min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
+    <div class="w-full max-w-md">
+        <!-- WiFi Signal Card -->
+        <div
+            class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Status da Conexão</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Monitoramento em tempo real</p>
+            </div>
+
+            <!-- Configuration Section -->
+            <div class="mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">⚙️ Configurações da Rede</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="networkNameInput" class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Nome
+                            da Rede</label>
+                        <input type="text" id="networkNameInput" value="LAIANE"
+                            class="w-full px-4 py-2 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-800 dark:text-white transition-all duration-200"
+                            placeholder="Digite o nome da rede">
+                    </div>
+                    <div>
+                        <label for="ipAddressInput" class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Endereço
+                            IP</label>
+                        <input type="text" id="ipAddressInput" value="192.168.15.1"
+                            class="w-full px-4 py-2 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-800 dark:text-white transition-all duration-200"
+                            placeholder="Digite o endereço IP">
+                    </div>
+                    <button id="saveConfig"
+                        class="w-full px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-opacity-90 transition-all duration-200 active:scale-95">
+                        Salvar Configurações
+                    </button>
+                </div>
+            </div>
+
+            <!-- WiFi Icon with waves -->
+            <div class="relative flex justify-center items-center mb-8 h-32">
+                <div class="absolute w-32 h-32 rounded-full bg-primary opacity-10 wave"></div>
+                <div class="absolute w-32 h-32 rounded-full bg-primary opacity-10 wave" style="animation-delay: 0.5s;">
+                </div>
+                <div class="relative">
+                    <svg id="wifiIcon" class="w-24 h-24 signal-pulse" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path id="arc1" d="M1 9C5 5 11 3 17 3C19.7614 3 22.5 3.5 25 5" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" class="text-primary" />
+                        <path id="arc2" d="M4 12C7 9.5 11 8 15 8C17 8 19 8.5 21 9.5" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" class="text-primary" />
+                        <path id="arc3" d="M7 15C9 13.5 11 13 13 13C14.5 13 16 13.5 17.5 14.5" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" class="text-primary" />
+                        <circle id="dot" cx="12" cy="18" r="2" fill="currentColor" class="text-primary" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Signal Strength Indicator -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Força do Sinal</span>
+                    <span id="signalText" class="text-sm font-bold text-primary">Excelente</span>
+                </div>
+                <div class="flex gap-1.5 h-12 items-end">
+                    <div id="bar1" class="flex-1 bg-primary rounded-t-lg transition-all duration-300"></div>
+                    <div id="bar2" class="flex-1 bg-primary rounded-t-lg transition-all duration-300"></div>
+                    <div id="bar3" class="flex-1 bg-primary rounded-t-lg transition-all duration-300"></div>
+                    <div id="bar4" class="flex-1 bg-primary rounded-t-lg transition-all duration-300"></div>
+                    <div id="bar5" class="flex-1 bg-primary rounded-t-lg transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Network Info -->
+            <div class="space-y-4 mb-6">
+                <div
+                    class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Nome da Rede</span>
+                    <span id="networkName" class="text-sm font-semibold text-gray-800 dark:text-white">LAIANE</span>
+                </div>
+                <div
+                    class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Velocidade</span>
+                    <span id="speed" class="text-sm font-semibold text-gray-800 dark:text-white">-- Mbps</span>
+                </div>
+                <div
+                    class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Endereço IP</span>
+                    <span id="ipAddress" class="text-sm font-semibold text-gray-800 dark:text-white">192.168.15.1</span>
+                </div>
+                <div
+                    class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Tipo de Conexão</span>
+                    <span id="connectionType" class="text-sm font-semibold text-gray-800 dark:text-white">--</span>
+                </div>
+                <div
+                    class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Velocidade Efetiva</span>
+                    <span id="effectiveType" class="text-sm font-semibold text-gray-800 dark:text-white">--</span>
+                </div>
+                <div
+                    class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Latência (RTT)</span>
+                    <span id="rtt" class="text-sm font-semibold text-gray-800 dark:text-white">-- ms</span>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div
+                class="flex items-center justify-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium text-green-700 dark:text-green-400">Conectado</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Signal strength control
+        const signalText = document.getElementById('signalText');
+        const bars = [
+            document.getElementById('bar1'),
+            document.getElementById('bar2'),
+            document.getElementById('bar3'),
+            document.getElementById('bar4'),
+            document.getElementById('bar5')
+        ];
+
+        const signalLevels = {
+            1: { text: 'Muito Fraco', color: '#EF4444', height: ['20%', '0%', '0%', '0%', '0%'] },
+            2: { text: 'Fraco', color: '#F59E0B', height: ['40%', '30%', '0%', '0%', '0%'] },
+            3: { text: 'Regular', color: '#EAB308', height: ['60%', '50%', '40%', '0%', '0%'] },
+            4: { text: 'Bom', color: '#10B981', height: ['80%', '70%', '60%', '50%', '0%'] },
+            5: { text: 'Excelente', color: '#5D5CDE', height: ['100%', '90%', '80%', '70%', '60%'] }
+        };
+
+        function updateSignal(level) {
+            const config = signalLevels[level];
+            signalText.textContent = config.text;
+            signalText.style.color = config.color;
+
+            bars.forEach((bar, index) => {
+                bar.style.height = config.height[index];
+                bar.style.backgroundColor = config.color;
+            });
+
+            // Update WiFi icon visibility based on signal
+            const arcs = document.querySelectorAll('#wifiIcon path');
+            arcs.forEach((arc, index) => {
+                if (index < level) {
+                    arc.style.opacity = '1';
+                } else {
+                    arc.style.opacity = '0.2';
+                }
+            });
+        }
+
+        // Real-time network monitoring
+        function updateNetworkInfo() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+            if (connection) {
+                // Update connection type
+                const typeElement = document.getElementById('connectionType');
+                if (connection.type) {
+                    typeElement.textContent = connection.type;
+                } else {
+                    typeElement.textContent = 'WiFi';
+                }
+
+                // Update effective type (4g, 3g, etc)
+                const effectiveTypeElement = document.getElementById('effectiveType');
+                if (connection.effectiveType) {
+                    const typeMap = {
+                        'slow-2g': '2G Lento',
+                        '2g': '2G',
+                        '3g': '3G',
+                        '4g': '4G/LTE'
+                    };
+                    effectiveTypeElement.textContent = typeMap[connection.effectiveType] || connection.effectiveType.toUpperCase();
+                }
+
+                // Update downlink speed
+                const speedElement = document.getElementById('speed');
+                if (connection.downlink) {
+                    speedElement.textContent = `${connection.downlink.toFixed(1)} Mbps`;
+                }
+
+                // Update RTT (latency)
+                const rttElement = document.getElementById('rtt');
+                if (connection.rtt !== undefined) {
+                    rttElement.textContent = `${connection.rtt} ms`;
+                }
+
+                // Calculate signal strength based on connection quality
+                let signalLevel = 5; // Default excellent
+
+                if (connection.effectiveType === 'slow-2g') {
+                    signalLevel = 1;
+                } else if (connection.effectiveType === '2g') {
+                    signalLevel = 2;
+                } else if (connection.effectiveType === '3g') {
+                    signalLevel = 3;
+                } else if (connection.effectiveType === '4g') {
+                    signalLevel = 5;
+                }
+
+                // Adjust signal based on RTT if available
+                if (connection.rtt !== undefined) {
+                    if (connection.rtt > 500) signalLevel = Math.min(signalLevel, 2);
+                    else if (connection.rtt > 300) signalLevel = Math.min(signalLevel, 3);
+                    else if (connection.rtt > 150) signalLevel = Math.min(signalLevel, 4);
+                }
+
+                // Adjust signal based on downlink if available
+                if (connection.downlink !== undefined) {
+                    if (connection.downlink < 1) signalLevel = Math.min(signalLevel, 2);
+                    else if (connection.downlink < 5) signalLevel = Math.min(signalLevel, 3);
+                    else if (connection.downlink < 10) signalLevel = Math.min(signalLevel, 4);
+                }
+
+                updateSignal(signalLevel);
+            } else {
+                // Browser doesn't support Network Information API
+                // Default to good signal
+                console.log('Network Information API não disponível. Usando valores padrão.');
+                updateSignal(4);
+                document.getElementById('connectionType').textContent = 'WiFi';
+                document.getElementById('effectiveType').textContent = '4G';
+                document.getElementById('speed').textContent = '25.0 Mbps';
+                document.getElementById('rtt').textContent = '50 ms';
+            }
+        }
+
+        // Monitor for online/offline status
+        function updateOnlineStatus() {
+            const statusContainer = document.querySelector('.bg-green-50');
+            const statusDot = statusContainer.querySelector('.w-2');
+            const statusText = statusContainer.querySelector('.text-sm');
+
+            if (navigator.onLine) {
+                statusContainer.className = 'flex items-center justify-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 transition-all duration-300';
+                statusDot.className = 'w-2 h-2 bg-green-500 rounded-full animate-pulse';
+                statusText.className = 'text-sm font-medium text-green-700 dark:text-green-400';
+                statusText.textContent = 'Conectado';
+            } else {
+                statusContainer.className = 'flex items-center justify-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 transition-all duration-300';
+                statusDot.className = 'w-2 h-2 bg-red-500 rounded-full';
+                statusText.className = 'text-sm font-medium text-red-700 dark:text-red-400';
+                statusText.textContent = 'Desconectado';
+            }
+        }
+
+        // Configuration storage (in memory)
+        let appConfig = {
+            networkName: 'LAIANE',
+            ipAddress: '192.168.15.1'
+        };
+
+        // Load initial configuration
+        function loadConfig() {
+            document.getElementById('networkNameInput').value = appConfig.networkName;
+            document.getElementById('networkName').textContent = appConfig.networkName;
+            document.getElementById('ipAddressInput').value = appConfig.ipAddress;
+            document.getElementById('ipAddress').textContent = appConfig.ipAddress;
+        }
+
+        // Save configuration
+        function saveConfig() {
+            const networkName = document.getElementById('networkNameInput').value.trim();
+            const ipAddress = document.getElementById('ipAddressInput').value.trim();
+
+            if (networkName === '') {
+                showNotification('⚠️ Por favor, digite um nome para a rede', 'warning');
+                return;
+            }
+
+            if (ipAddress === '') {
+                showNotification('⚠️ Por favor, digite um endereço IP', 'warning');
+                return;
+            }
+
+            // Simple IP validation
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipPattern.test(ipAddress)) {
+                showNotification('⚠️ Endereço IP inválido', 'error');
+                return;
+            }
+
+            // Save to memory
+            appConfig.networkName = networkName;
+            appConfig.ipAddress = ipAddress;
+
+            // Update display
+            document.getElementById('networkName').textContent = networkName;
+            document.getElementById('ipAddress').textContent = ipAddress;
+
+            showNotification('✅ Configurações salvas com sucesso!', 'success');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const colors = {
+                success: { bg: 'bg-green-500', icon: '✅' },
+                warning: { bg: 'bg-yellow-500', icon: '⚠️' },
+                error: { bg: 'bg-red-500', icon: '❌' }
+            };
+
+            const config = colors[type];
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${config.bg} text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce flex items-center gap-2`;
+            notification.innerHTML = `<span class="text-lg">${config.icon}</span><span>${message}</span>`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'none';
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Event listeners
+        document.getElementById('saveConfig').addEventListener('click', saveConfig);
+
+        // Allow Enter key to save
+        document.getElementById('networkNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveConfig();
+        });
+
+        document.getElementById('ipAddressInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveConfig();
+        });
+
+        // Initialize
+        loadConfig();
+        updateNetworkInfo();
+        updateOnlineStatus();
+
+        // Update every 2 seconds
+        setInterval(updateNetworkInfo, 2000);
+
+        // Listen for connection changes
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (connection) {
+            connection.addEventListener('change', updateNetworkInfo);
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+    </script>
+</body>
+
+</html>
